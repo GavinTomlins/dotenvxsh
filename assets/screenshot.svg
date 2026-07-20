@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="620" viewBox="0 0 760 620" font-family="SF Mono, Menlo, Monaco, 'DejaVu Sans Mono', monospace" font-size="14">
+  <rect width="760" height="620" rx="10" fill="#1e2030"/>
+  <rect width="760" height="34" rx="10" fill="#2a2d3e"/>
+  <rect y="24" width="760" height="10" fill="#2a2d3e"/>
+  <circle cx="22" cy="17" r="6" fill="#ff5f57"/>
+  <circle cx="42" cy="17" r="6" fill="#febc2e"/>
+  <circle cx="62" cy="17" r="6" fill="#28c840"/>
+  <text x="380" y="22" fill="#8a8fa3" text-anchor="middle" font-size="12">dotenvxsh</text>
+  <g fill="#c8ccd8">
+    <text x="20" y="62"><tspan fill="#7dcfff">gavin@neura</tspan> <tspan fill="#8a8fa3">~/repos/personal/dotenvxsh %</tspan> ./dotenvxsh.sh</text>
+    <text x="20" y="90">🔐 <tspan font-weight="bold" fill="#e6e9f0">dotenvx helper</tspan></text>
+    <text x="20" y="118" font-weight="bold" fill="#e6e9f0">Which env file?</text>
+    <text x="36" y="140"><tspan font-weight="bold" fill="#e6e9f0">1</tspan>) ./.env <tspan fill="#8a8fa3">(current directory)</tspan></text>
+    <text x="36" y="162"><tspan font-weight="bold" fill="#e6e9f0">2</tspan>) ~/.config/credentials/credentials.env</text>
+    <text x="20" y="184"><tspan font-weight="bold" fill="#e6e9f0">Choose [1/2]:</tspan> 2</text>
+    <text x="20" y="216"><tspan font-weight="bold" fill="#e6e9f0">dotenvxsh</tspan> <tspan fill="#8a8fa3">— target file: ~/.config/credentials/credentials.env</tspan></text>
+    <text x="36" y="240"><tspan font-weight="bold" fill="#e6e9f0">1</tspan>) 🔑 API_KEY          <tspan fill="#8a8fa3">(adds &lt;NAME&gt;_API_KEY)</tspan></text>
+    <text x="36" y="262"><tspan font-weight="bold" fill="#e6e9f0">2</tspan>) 👤 USER &amp; PASSWORD  <tspan fill="#8a8fa3">(adds &lt;NAME&gt;_PASSWORD and USER_&lt;NAME&gt;)</tspan></text>
+    <text x="36" y="284"><tspan font-weight="bold" fill="#e6e9f0">3</tspan>) ✏️ Update API_KEY   <tspan fill="#8a8fa3">(search &amp; update a *_API_KEY)</tspan></text>
+    <text x="36" y="306"><tspan font-weight="bold" fill="#e6e9f0">4</tspan>) ✏️ Update PASSWORD  <tspan fill="#8a8fa3">(search &amp; update a *_PASSWORD)</tspan></text>
+    <text x="36" y="328"><tspan font-weight="bold" fill="#e6e9f0">5</tspan>) 🔍 Show API_KEY     <tspan fill="#8a8fa3">(search &amp; display a *_API_KEY)</tspan></text>
+    <text x="36" y="350"><tspan font-weight="bold" fill="#e6e9f0">6</tspan>) 🔍 Show USER &amp; PASSWORD <tspan fill="#8a8fa3">(search &amp; display *_PASSWORD + USER_*)</tspan></text>
+    <text x="36" y="372"><tspan font-weight="bold" fill="#e6e9f0">q</tspan>) Quit</text>
+    <text x="20" y="394"><tspan font-weight="bold" fill="#e6e9f0">Choose [1-6/q]:</tspan> 1</text>
+    <text x="20" y="422"><tspan font-weight="bold" fill="#e6e9f0">API key name (e.g. SOME_SYSTEM):</tspan> github</text>
+    <text x="20" y="444">🔑 <tspan font-weight="bold" fill="#e6e9f0">Value for GITHUB_API_KEY (hidden):</tspan></text>
+    <text x="20" y="472"><tspan fill="#7dcfff">==&gt;</tspan> Ensuring credentials.env is encrypted</text>
+    <text x="20" y="494"><tspan fill="#9ece6a"> ✔</tspan> Backup: committed encrypted credentials.env (a1b2c3d)</text>
+    <text x="20" y="516"><tspan fill="#7dcfff">==&gt;</tspan> Encrypting new value</text>
+    <text x="20" y="538"><tspan fill="#9ece6a"> ✔</tspan> Added GITHUB_API_KEY to credentials.env (encrypted)</text>
+    <text x="20" y="560"><tspan fill="#7dcfff">==&gt;</tspan> Round-trip check (decrypted via dotenvx get):</text>
+    <text x="36" y="582">🔑 <tspan font-weight="bold" fill="#e6e9f0">GITHUB_API_KEY</tspan> = ghp_****************</text>
+  </g>
+</svg>
