@@ -1,0 +1,8 @@
+# dotenvx private keys — never commit
+.env.keys
+
+# local env files and script backups
+.env
+*.env
+*.bak
+!*credentials.env.example
