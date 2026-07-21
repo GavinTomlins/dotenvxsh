@@ -13,7 +13,20 @@ GitHub, and the script reports its own version via `./dotenvxsh.sh --version`.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- Scrollback protection for decrypted secrets
+  ([#4](https://github.com/GavinTomlins/dotenvxsh/issues/4), reported by
+  Brenton Keats): a `DOTENVXSH_ECHO_SECRETS` setting (`always` / `masked` /
+  `never`, default `masked`) and a `--no-echo` switch. Round-trip checks now
+  print masked values (or none), and the Show options reveal secrets on the
+  terminal's alternate screen, which is never retained in scrollback.
+
+### Changed
+
+- The round-trip check after every write now verifies that the stored value
+  decrypts back to exactly what was entered, reporting any mismatch, instead
+  of just echoing the decrypted value.
 
 ## [0.1.0] - 2026-07-21
 

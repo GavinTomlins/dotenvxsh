@@ -48,6 +48,8 @@ ln -s "$PWD/dotenvxsh.sh" /usr/local/bin/dotenvxsh
 ```sh
 ./dotenvxsh.sh               # interactive file picker
 ./dotenvxsh.sh path/to/.env  # target a specific file, skipping the picker
+./dotenvxsh.sh --no-echo     # never print decrypted values (see below)
+./dotenvxsh.sh --version     # print the version
 ```
 
 With no argument, the script first asks which env file to work on:
@@ -160,6 +162,29 @@ first and requires an explicit `y` to proceed, and it backs up the fully
 encrypted state (git commit or `.bak` copy) before decrypting. Re-encrypt with
 option 7 when you are done.
 
+### Controlling how secrets are displayed
+
+Decrypted values printed to the terminal persist in scrollback (and tmux
+history, session logs, screen recordings). dotenvxsh therefore controls all
+secret display through `DOTENVXSH_ECHO_SECRETS`:
+
+| Mode     | Round-trip check after a write        | Show options (5/6)        |
+| -------- | ------------------------------------- | ------------------------- |
+| `masked` *(default)* | masked value, e.g. `ghp_…23 ✔ verified` | alternate-screen reveal |
+| `never`  | `✔ stored and verified (value not shown)` | alternate-screen reveal |
+| `always` | full plaintext value                  | printed inline            |
+
+`./dotenvxsh.sh --no-echo` is shorthand for `DOTENVXSH_ECHO_SECRETS=never`,
+and the variable can be exported from your shell profile to set a permanent
+preference.
+
+In `masked` and `never` modes, deliberate reveals (options 5 and 6) are drawn
+on the terminal's **alternate screen buffer** — the same mechanism `less` and
+`vim` use. The value is shown until you press a key, then the screen is
+restored and nothing remains in scrollback. Regardless of mode, every write is
+still verified: the stored value is decrypted and compared to what you
+entered, and any mismatch is reported.
+
 ### What happens on every write
 
 1. **Duplicate check** — a key that already exists is never re-added.
@@ -168,8 +193,9 @@ option 7 when you are done.
 3. **Backup** — the encrypted file is committed to git (or copied to a
    timestamped `.bak` when not in a repository).
 4. **Write** — the new value is appended (or set, for updates) and encrypted.
-5. **Round-trip check** — the value is decrypted with `dotenvx get` and echoed
-   back so you can confirm it stored correctly.
+5. **Round-trip check** — the value is decrypted with `dotenvx get` and
+   compared against what you entered, confirming it stored correctly (masked
+   by default; see *Controlling how secrets are displayed*).
 
 No manual decryption is ever needed: dotenvx uses public-key encryption, so
 new values are encrypted with the `DOTENV_PUBLIC_KEY` already in the file.
@@ -190,8 +216,10 @@ dotenvx get GITHUB_API_KEY -f ~/.config/credentials/credentials.env
   env file. **Never commit `.env.keys`** — this repository's `.gitignore`
   excludes it, and the script's backup commits only ever include the env file
   itself.
-- The round-trip check and the show options print decrypted secrets to your
-  terminal (and therefore scrollback). Avoid using them while screen-sharing.
+- Secret display is scrollback-safe by default: round-trip checks are masked
+  and reveals use the alternate screen. Only `DOTENVXSH_ECHO_SECRETS=always`
+  prints plaintext into scrollback — avoid it while screen-sharing, and prefer
+  `--no-echo` in recorded or shared sessions.
 
 ## Changelog and versioning
 
