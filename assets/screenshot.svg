@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="620" viewBox="0 0 760 620" font-family="SF Mono, Menlo, Monaco, 'DejaVu Sans Mono', monospace" font-size="14">
-  <rect width="760" height="620" rx="10" fill="#1e2030"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="664" viewBox="0 0 760 664" font-family="SF Mono, Menlo, Monaco, 'DejaVu Sans Mono', monospace" font-size="14">
+  <rect width="760" height="664" rx="10" fill="#1e2030"/>
   <rect width="760" height="34" rx="10" fill="#2a2d3e"/>
   <rect y="24" width="760" height="10" fill="#2a2d3e"/>
   <circle cx="22" cy="17" r="6" fill="#ff5f57"/>
@@ -20,15 +20,17 @@
     <text x="36" y="306"><tspan font-weight="bold" fill="#e6e9f0">4</tspan>) ✏️ Update PASSWORD  <tspan fill="#8a8fa3">(search &amp; update a *_PASSWORD)</tspan></text>
     <text x="36" y="328"><tspan font-weight="bold" fill="#e6e9f0">5</tspan>) 🔍 Show API_KEY     <tspan fill="#8a8fa3">(search &amp; display a *_API_KEY)</tspan></text>
     <text x="36" y="350"><tspan font-weight="bold" fill="#e6e9f0">6</tspan>) 🔍 Show USER &amp; PASSWORD <tspan fill="#8a8fa3">(search &amp; display *_PASSWORD + USER_*)</tspan></text>
-    <text x="36" y="372"><tspan font-weight="bold" fill="#e6e9f0">q</tspan>) Quit</text>
-    <text x="20" y="394"><tspan font-weight="bold" fill="#e6e9f0">Choose [1-6/q]:</tspan> 1</text>
-    <text x="20" y="422"><tspan font-weight="bold" fill="#e6e9f0">API key name (e.g. SOME_SYSTEM):</tspan> github</text>
-    <text x="20" y="444">🔑 <tspan font-weight="bold" fill="#e6e9f0">Value for GITHUB_API_KEY (hidden):</tspan></text>
-    <text x="20" y="472"><tspan fill="#7dcfff">==&gt;</tspan> Ensuring credentials.env is encrypted</text>
-    <text x="20" y="494"><tspan fill="#9ece6a"> ✔</tspan> Backup: committed encrypted credentials.env (a1b2c3d)</text>
-    <text x="20" y="516"><tspan fill="#7dcfff">==&gt;</tspan> Encrypting new value</text>
-    <text x="20" y="538"><tspan fill="#9ece6a"> ✔</tspan> Added GITHUB_API_KEY to credentials.env (encrypted)</text>
-    <text x="20" y="560"><tspan fill="#7dcfff">==&gt;</tspan> Round-trip check (decrypted via dotenvx get):</text>
-    <text x="36" y="582">🔑 <tspan font-weight="bold" fill="#e6e9f0">GITHUB_API_KEY</tspan> = ghp_****************</text>
+    <text x="36" y="372"><tspan font-weight="bold" fill="#e6e9f0">7</tspan>) 🔒 Encrypt file     <tspan fill="#8a8fa3">(dotenvx encrypt the whole file)</tspan></text>
+    <text x="36" y="394"><tspan font-weight="bold" fill="#e6e9f0">8</tspan>) 🔓 Decrypt file     <tspan fill="#8a8fa3">(dotenvx decrypt to plaintext, backup first)</tspan></text>
+    <text x="36" y="416"><tspan font-weight="bold" fill="#e6e9f0">q</tspan>) Quit</text>
+    <text x="20" y="438"><tspan font-weight="bold" fill="#e6e9f0">Choose [1-8/q]:</tspan> 1</text>
+    <text x="20" y="466"><tspan font-weight="bold" fill="#e6e9f0">API key name (e.g. SOME_SYSTEM):</tspan> github</text>
+    <text x="20" y="488">🔑 <tspan font-weight="bold" fill="#e6e9f0">Value for GITHUB_API_KEY (hidden):</tspan></text>
+    <text x="20" y="516"><tspan fill="#7dcfff">==&gt;</tspan> Ensuring credentials.env is encrypted</text>
+    <text x="20" y="538"><tspan fill="#9ece6a"> ✔</tspan> Backup: committed encrypted credentials.env (a1b2c3d)</text>
+    <text x="20" y="560"><tspan fill="#7dcfff">==&gt;</tspan> Encrypting new value</text>
+    <text x="20" y="582"><tspan fill="#9ece6a"> ✔</tspan> Added GITHUB_API_KEY to credentials.env (encrypted)</text>
+    <text x="20" y="604"><tspan fill="#7dcfff">==&gt;</tspan> Round-trip check (decrypted via dotenvx get):</text>
+    <text x="36" y="626">🔑 <tspan font-weight="bold" fill="#e6e9f0">GITHUB_API_KEY</tspan> = ghp_****************</text>
   </g>
 </svg>

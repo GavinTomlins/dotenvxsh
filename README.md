@@ -67,6 +67,8 @@ central, encrypted credentials vault usable from any project.
   4) ✏️ Update PASSWORD  (search & update a *_PASSWORD)
   5) 🔍 Show API_KEY     (search & display a *_API_KEY)
   6) 🔍 Show USER & PASSWORD (search & display *_PASSWORD + USER_*)
+  7) 🔒 Encrypt file     (dotenvx encrypt the whole file)
+  8) 🔓 Decrypt file     (dotenvx decrypt to plaintext, backup first)
   q) Quit
 ```
 
@@ -90,6 +92,16 @@ value all abort with the file untouched.
 `dotenvx get` and printed. Option 6 collapses `USER_FOO` / `FOO_PASSWORD`
 matches into one logical credential and displays both halves of the pair,
 warning if either half is missing.
+
+**7 — Encrypt file.** Runs `dotenvx encrypt` on the selected file. Idempotent:
+plaintext values are encrypted, already-encrypted values are left untouched,
+so it is always safe to run.
+
+**8 — Decrypt file.** Writes decrypted plaintext back to the selected file —
+useful for bulk edits. Because this leaves secrets readable on disk, it warns
+first and requires an explicit `y` to proceed, and it backs up the fully
+encrypted state (git commit or `.bak` copy) before decrypting. Re-encrypt with
+option 7 when you are done.
 
 ### What happens on every write
 
