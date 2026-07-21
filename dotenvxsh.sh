@@ -16,6 +16,13 @@
 #              Show reveals still use the alternate screen
 #   --no-echo is shorthand for DOTENVXSH_ECHO_SECRETS=never.
 #
+# Naming schema:
+#   DOTENVXSH_NAMING_SCHEMA=suffix|reverse   (default: suffix)
+#     suffix  — AIHUB_API_KEY, AIHUB_PASSWORD, AIHUB_USER
+#     reverse — API_KEY_AIHUB, PASSWORD_AIHUB, USER_AIHUB
+#   Search, update, and show recognise both orders regardless of the setting,
+#   so existing entries written under either schema remain accessible.
+#
 # Flow per secret:
 #   1. Check the key does not already exist in the file.
 #   2. Ensure the file is fully encrypted (dotenvx encrypt).
@@ -56,6 +63,26 @@ case "$ECHO_SECRETS" in
 esac
 
 CREDENTIALS_FILE="${DOTENVXSH_CREDENTIALS_FILE:-${HOME}/.config/credentials/credentials.env}"
+
+NAMING_SCHEMA="${DOTENVXSH_NAMING_SCHEMA:-suffix}"
+case "$NAMING_SCHEMA" in
+  suffix|reverse) ;;
+  *)
+    printf 'dotenvxsh: invalid DOTENVXSH_NAMING_SCHEMA=%s (use suffix or reverse)\n' "$NAMING_SCHEMA" >&2
+    exit 1
+    ;;
+esac
+
+# Key-name builders honouring NAMING_SCHEMA
+api_key_name()  { if [[ "$NAMING_SCHEMA" == "reverse" ]]; then printf 'API_KEY_%s' "$1"; else printf '%s_API_KEY' "$1"; fi; }
+password_name() { if [[ "$NAMING_SCHEMA" == "reverse" ]]; then printf 'PASSWORD_%s' "$1"; else printf '%s_PASSWORD' "$1"; fi; }
+user_name()     { if [[ "$NAMING_SCHEMA" == "reverse" ]]; then printf 'USER_%s' "$1"; else printf '%s_USER' "$1"; fi; }
+
+# Search filters accept both orders so files written under either schema
+# (or the pre-0.2 mixed NAME_PASSWORD/USER_NAME layout) stay findable.
+API_KEY_FILTER='(_API_KEY$|^API_KEY_)'
+PASSWORD_FILTER='(_PASSWORD$|^PASSWORD_)'
+USERPASS_FILTER='(_PASSWORD$|^PASSWORD_|_USER$|^USER_)'
 
 BOLD=$'\033[1m'
 DIM=$'\033[2m'
@@ -286,11 +313,11 @@ choose_match() {
   done
 }
 
-# Prompt for a search term, find keys ending <suffix>, let the user pick one.
-# Echoes the chosen key on stdout; returns 1 on cancel or no match.
+# Prompt for a search term, find keys matching <filter>, let the user pick
+# one. Echoes the chosen key on stdout; returns 1 on cancel or no match.
 # All UI goes to stderr so this works inside command substitution.
 search_and_pick() {
-  local icon="$1" suffix="$2" label="$3" verb="$4"
+  local icon="$1" filter="$2" desc="$3" label="$4" verb="$5"
   local term matches_str key matches=()
 
   if [[ ! -f "$ENV_FILE" ]]; then
@@ -304,9 +331,9 @@ search_and_pick() {
     return 1
   fi
 
-  matches_str="$(find_matching_keys "$term" "${suffix}\$")"
+  matches_str="$(find_matching_keys "$term" "$filter")"
   if [[ -z "$matches_str" ]]; then
-    error "No keys ending ${suffix} match '${term}' in ${ENV_FILE}."
+    error "No ${desc} keys match '${term}' in ${ENV_FILE}."
     return 1
   fi
   while IFS= read -r key; do matches+=("$key"); done <<< "$matches_str"
@@ -319,12 +346,12 @@ search_and_pick() {
   printf '%s' "$key"
 }
 
-# Shared update flow: search for a key by suffix, pick a match, set a new value.
+# Shared update flow: search for a key by filter, pick a match, set a new value.
 update_secret() {
-  local icon="$1" suffix="$2" label="$3"
+  local icon="$1" filter="$2" desc="$3" label="$4"
   local key value
 
-  if ! key="$(search_and_pick "$icon" "$suffix" "$label" "update")"; then
+  if ! key="$(search_and_pick "$icon" "$filter" "$desc" "$label" "update")"; then
     return 0
   fi
   info "Selected ${key}"
@@ -345,7 +372,7 @@ update_secret() {
 
 show_api_key() {
   local key
-  if ! key="$(search_and_pick "$SHOW_ICON" "_API_KEY" "API key" "show")"; then
+  if ! key="$(search_and_pick "$SHOW_ICON" "$API_KEY_FILTER" "API-key" "API key" "show")"; then
     return 0
   fi
   if [[ "$ECHO_SECRETS" == "always" ]]; then
@@ -372,16 +399,20 @@ show_user_password() {
     return 0
   fi
 
-  matches_str="$(find_matching_keys "$term" "(_PASSWORD\$|^USER_)")"
+  matches_str="$(find_matching_keys "$term" "$USERPASS_FILTER")"
   if [[ -z "$matches_str" ]]; then
-    error "No *_PASSWORD or USER_* keys match '${term}' in ${ENV_FILE}."
+    error "No password or user keys (either schema order) match '${term}' in ${ENV_FILE}."
     return 0
   fi
 
-  # Collapse USER_FOO and FOO_PASSWORD into one logical name FOO
+  # Collapse all schema variants of one credential into one logical name FOO
   while IFS= read -r key; do
     if [[ "$key" == USER_* ]]; then
       name="${key#USER_}"
+    elif [[ "$key" == PASSWORD_* ]]; then
+      name="${key#PASSWORD_}"
+    elif [[ "$key" == *_USER ]]; then
+      name="${key%_USER}"
     else
       name="${key%_PASSWORD}"
     fi
@@ -397,16 +428,25 @@ show_user_password() {
     return 0
   fi
 
-  local lines=()
-  if key_exists "${name}_PASSWORD"; then
-    lines+=("$(format_secret_line "$KEY_ICON" "${name}_PASSWORD")")
-  else
-    warn "No ${name}_PASSWORD in ${ENV_FILE}."
+  # Show every schema variant of the pair that exists in the file
+  local lines=() found_pass=0 found_user=0
+  for key in "${name}_PASSWORD" "PASSWORD_${name}"; do
+    if key_exists "$key"; then
+      lines+=("$(format_secret_line "$KEY_ICON" "$key")")
+      found_pass=1
+    fi
+  done
+  for key in "${name}_USER" "USER_${name}"; do
+    if key_exists "$key"; then
+      lines+=("$(format_secret_line "$USER_ICON" "$key")")
+      found_user=1
+    fi
+  done
+  if [[ $found_pass -eq 0 ]]; then
+    warn "No password key for ${name} in ${ENV_FILE}."
   fi
-  if key_exists "USER_${name}"; then
-    lines+=("$(format_secret_line "$USER_ICON" "USER_${name}")")
-  else
-    warn "No USER_${name} in ${ENV_FILE}."
+  if [[ $found_user -eq 0 ]]; then
+    warn "No user key for ${name} in ${ENV_FILE}."
   fi
   if [[ ${#lines[@]} -eq 0 ]]; then
     return 0
@@ -422,7 +462,7 @@ show_user_password() {
 add_api_key() {
   local name key value
   name="$(prompt_name "API key name (e.g. SOME_SYSTEM)")"
-  key="${name}_API_KEY"
+  key="$(api_key_name "$name")"
 
   if key_exists "$key"; then
     error "${key} already exists in ${ENV_FILE} — nothing added."
@@ -441,11 +481,11 @@ add_api_key() {
 }
 
 add_user_password() {
-  # One name covers the pair: NAME -> NAME_PASSWORD and USER_NAME
+  # One name covers the pair; key order follows NAMING_SCHEMA
   local name user_key pass_key user_val pass_val skip_user=0 skip_pass=0
   name="$(prompt_name "PASSWORD NAME (e.g. AIHUB)")"
-  pass_key="${name}_PASSWORD"
-  user_key="USER_${name}"
+  pass_key="$(password_name "$name")"
+  user_key="$(user_name "$name")"
 
   if key_exists "$pass_key"; then
     error "${pass_key} already exists in ${ENV_FILE} — it will be skipped."
@@ -536,12 +576,12 @@ decrypt_env_file() {
 main_menu() {
   while true; do
     printf '\n%s\n' "${BOLD}dotenvxsh${RESET} ${DIM}— target file: ${ENV_FILE}${RESET}"
-    printf '%s\n' "  ${BOLD}1${RESET}) ${KEY_ICON} API_KEY          ${DIM}(adds <NAME>_API_KEY)${RESET}"
-    printf '%s\n' "  ${BOLD}2${RESET}) ${USER_ICON} USER & PASSWORD  ${DIM}(adds <NAME>_PASSWORD and USER_<NAME>)${RESET}"
+    printf '%s\n' "  ${BOLD}1${RESET}) ${KEY_ICON} API_KEY          ${DIM}(adds $(api_key_name '<NAME>'))${RESET}"
+    printf '%s\n' "  ${BOLD}2${RESET}) ${USER_ICON} USER & PASSWORD  ${DIM}(adds $(password_name '<NAME>') and $(user_name '<NAME>'))${RESET}"
     printf '%s\n' "  ${BOLD}3${RESET}) ${EDIT_ICON}Update API_KEY   ${DIM}(search & update a *_API_KEY)${RESET}"
     printf '%s\n' "  ${BOLD}4${RESET}) ${EDIT_ICON}Update PASSWORD  ${DIM}(search & update a *_PASSWORD)${RESET}"
     printf '%s\n' "  ${BOLD}5${RESET}) ${SHOW_ICON} Show API_KEY     ${DIM}(search & display a *_API_KEY)${RESET}"
-    printf '%s\n' "  ${BOLD}6${RESET}) ${SHOW_ICON} Show USER & PASSWORD ${DIM}(search & display *_PASSWORD + USER_*)${RESET}"
+    printf '%s\n' "  ${BOLD}6${RESET}) ${SHOW_ICON} Show USER & PASSWORD ${DIM}(search & display a credential pair)${RESET}"
     printf '%s\n' "  ${BOLD}7${RESET}) ${LOCK_ICON} Encrypt file     ${DIM}(dotenvx encrypt the whole file)${RESET}"
     printf '%s\n' "  ${BOLD}8${RESET}) ${UNLOCK_ICON} Decrypt file     ${DIM}(dotenvx decrypt to plaintext, backup first)${RESET}"
     printf '%s\n' "  ${BOLD}q${RESET}) Quit"
@@ -549,8 +589,8 @@ main_menu() {
     case "$choice" in
       1) add_api_key ;;
       2) add_user_password ;;
-      3) update_secret "$KEY_ICON" "_API_KEY" "API key" ;;
-      4) update_secret "$KEY_ICON" "_PASSWORD" "Password" ;;
+      3) update_secret "$KEY_ICON" "$API_KEY_FILTER" "API-key" "API key" ;;
+      4) update_secret "$KEY_ICON" "$PASSWORD_FILTER" "password" "Password" ;;
       5) show_api_key ;;
       6) show_user_password ;;
       7) encrypt_env_file ;;
