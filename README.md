@@ -55,8 +55,62 @@ Which env file?
   2) ~/.config/credentials/credentials.env
 ```
 
-Choosing option 2 creates `~/.config/credentials/` on first use, giving you a
-central, encrypted credentials vault usable from any project.
+### Local and global configuration
+
+dotenvxsh works with two kinds of env file, chosen in the picker above:
+
+- **Local (`./.env`)** — a per-project file in the current directory. Use it
+  for secrets that belong to one project (its database password, its service
+  tokens). The encrypted file can be committed alongside the project's code;
+  only the `.env.keys` private key must stay out of the repository.
+- **Global** — a single machine-wide credentials vault, by default
+  `~/.config/credentials/credentials.env`. Use it for personal credentials you
+  reach for across many projects (your GitHub token, registrar API keys,
+  logins). It is created automatically the first time you select it.
+
+The same secret can live in both: a project `.env` for what the project needs,
+the global vault for what *you* need everywhere.
+
+#### Configuring the global credentials file
+
+The default location is `~/.config/credentials/credentials.env`. To use a
+different path — for example `~/.config/credentials.env` — set
+`DOTENVXSH_CREDENTIALS_FILE` in your shell profile (`~/.zshrc` / `~/.bashrc`):
+
+```sh
+export DOTENVXSH_CREDENTIALS_FILE="$HOME/.config/credentials.env"
+```
+
+Picker option 2 then offers that path instead. For a one-off file, skip the
+picker entirely and pass any path as the first argument:
+
+```sh
+./dotenvxsh.sh ~/work/secrets/staging.env
+```
+
+#### Setting up the global vault (recommended)
+
+To get commit-based backups for the global vault, make its directory a git
+repository before first use:
+
+```sh
+mkdir -p ~/.config/credentials
+cd ~/.config/credentials
+git init
+printf '.env.keys\n*.bak\n' > .gitignore
+```
+
+Every change dotenvxsh makes will then be preceded by a commit of the
+encrypted file in this repository, giving you a full history to roll back to.
+Without git, dotenvxsh falls back to timestamped `.bak` copies next to the
+file. Either way, keep `.env.keys` out of any repository.
+
+Consume the global vault from anywhere — dotenvx finds the private key in the
+`.env.keys` file next to the vault, regardless of your current directory:
+
+```sh
+dotenvx run -f ~/.config/credentials/credentials.env -- some-command
+```
 
 ### Menu
 
