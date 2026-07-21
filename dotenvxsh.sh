@@ -30,6 +30,8 @@ USER_ICON="👤"
 VAULT_ICON="🔐"
 EDIT_ICON="✏️ "
 SHOW_ICON="🔍"
+LOCK_ICON="🔒"
+UNLOCK_ICON="🔓"
 
 info()  { printf '%s\n' "${CYAN}==>${RESET} $*"; }
 ok()    { printf '%s\n' "${GREEN} ✔${RESET} $*"; }
@@ -392,6 +394,38 @@ choose_env_file() {
   done
 }
 
+# Encrypt the whole selected file (idempotent — plaintext values are
+# encrypted, already-encrypted values are left alone).
+encrypt_env_file() {
+  if [[ ! -f "$ENV_FILE" ]]; then
+    error "${ENV_FILE} does not exist — nothing to encrypt."
+    return 0
+  fi
+  info "Encrypting ${ENV_FILE}"
+  encrypt_file
+  ok "${ENV_FILE} is encrypted ${LOCK_ICON}"
+}
+
+# Decrypt the whole selected file to plaintext on disk, after a backup of the
+# encrypted state and an explicit confirmation.
+decrypt_env_file() {
+  local confirm
+  if [[ ! -f "$ENV_FILE" ]]; then
+    error "${ENV_FILE} does not exist — nothing to decrypt."
+    return 0
+  fi
+  warn "This will write DECRYPTED PLAINTEXT values to ${ENV_FILE}."
+  read -r -p "${BOLD}${UNLOCK_ICON} Decrypt ${ENV_FILE}? [y/N]${RESET}: " confirm </dev/tty
+  case "$confirm" in
+    y|Y|yes|YES) ;;
+    *) warn "Cancelled — file left encrypted."; return 0 ;;
+  esac
+  info "Backing up encrypted state first"
+  prepare_file
+  dotenvx decrypt -f "$ENV_FILE" >/dev/null
+  ok "${ENV_FILE} is now plaintext ${UNLOCK_ICON} — re-encrypt with option 7 when done."
+}
+
 main_menu() {
   while true; do
     printf '\n%s\n' "${BOLD}dotenvxsh${RESET} ${DIM}— target file: ${ENV_FILE}${RESET}"
@@ -401,8 +435,10 @@ main_menu() {
     printf '%s\n' "  ${BOLD}4${RESET}) ${EDIT_ICON}Update PASSWORD  ${DIM}(search & update a *_PASSWORD)${RESET}"
     printf '%s\n' "  ${BOLD}5${RESET}) ${SHOW_ICON} Show API_KEY     ${DIM}(search & display a *_API_KEY)${RESET}"
     printf '%s\n' "  ${BOLD}6${RESET}) ${SHOW_ICON} Show USER & PASSWORD ${DIM}(search & display *_PASSWORD + USER_*)${RESET}"
+    printf '%s\n' "  ${BOLD}7${RESET}) ${LOCK_ICON} Encrypt file     ${DIM}(dotenvx encrypt the whole file)${RESET}"
+    printf '%s\n' "  ${BOLD}8${RESET}) ${UNLOCK_ICON} Decrypt file     ${DIM}(dotenvx decrypt to plaintext, backup first)${RESET}"
     printf '%s\n' "  ${BOLD}q${RESET}) Quit"
-    read -r -p "${BOLD}Choose [1-6/q]${RESET}: " choice </dev/tty
+    read -r -p "${BOLD}Choose [1-8/q]${RESET}: " choice </dev/tty
     case "$choice" in
       1) add_api_key ;;
       2) add_user_password ;;
@@ -410,6 +446,8 @@ main_menu() {
       4) update_secret "$KEY_ICON" "_PASSWORD" "Password" ;;
       5) show_api_key ;;
       6) show_user_password ;;
+      7) encrypt_env_file ;;
+      8) decrypt_env_file ;;
       q|Q) printf '%s\n' "${DIM}Bye.${RESET}"; exit 0 ;;
       *) error "Invalid choice: ${choice}" ;;
     esac
