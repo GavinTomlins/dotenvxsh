@@ -8,6 +8,9 @@ and decrypted round-trip verification after every write.
 
 ![dotenvxsh session](assets/screenshot.svg)
 
+> 🤖 **AI agents:** the TUI is interactive-only — see [AGENTS.md](AGENTS.md)
+> for non-interactive equivalents, the naming schema, and safety rules.
+
 ## Prerequisites
 
 - **[dotenvx](https://dotenvx.com)** — the encrypted `.env` toolkit this script drives.
