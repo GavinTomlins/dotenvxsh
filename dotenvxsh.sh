@@ -16,6 +16,15 @@
 
 set -euo pipefail
 
+VERSION="0.1.0"
+
+case "${1:-}" in
+  -v|--version)
+    printf 'dotenvxsh %s\n' "$VERSION"
+    exit 0
+    ;;
+esac
+
 ENV_FILE="${1:-}"
 CREDENTIALS_FILE="${DOTENVXSH_CREDENTIALS_FILE:-${HOME}/.config/credentials/credentials.env}"
 
@@ -457,6 +466,6 @@ main_menu() {
 }
 
 require_dotenvx
-printf '\n%s\n' "${VAULT_ICON} ${BOLD}dotenvx helper${RESET}"
+printf '\n%s\n' "${VAULT_ICON} ${BOLD}dotenvx helper${RESET} ${DIM}v${VERSION}${RESET}"
 choose_env_file
 main_menu

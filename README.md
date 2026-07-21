@@ -193,10 +193,16 @@ dotenvx get GITHUB_API_KEY -f ~/.config/credentials/credentials.env
 - The round-trip check and the show options print decrypted secrets to your
   terminal (and therefore scrollback). Avoid using them while screen-sharing.
 
-## Changelog
+## Changelog and versioning
 
 Notable changes are tracked in human-readable form in
-[CHANGELOG.md](CHANGELOG.md).
+[CHANGELOG.md](CHANGELOG.md). Releases follow
+[Semantic Versioning](https://semver.org) and are tagged `v<version>`;
+check your installed version with:
+
+```sh
+./dotenvxsh.sh --version
+```
 
 ## License
 

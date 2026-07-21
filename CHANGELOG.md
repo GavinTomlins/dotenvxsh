@@ -2,12 +2,20 @@
 
 All notable changes to dotenvxsh are documented here, in human terms.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Each commit's mandatory `Changelog:` trailer (`added`, `fixed`, `changed`,
-`deprecated`, `removed`, `security`, `performance`, `other`) says which section
-its change belongs in.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
+**MAJOR** for breaking changes to the script's behaviour or variable-naming
+schema, **MINOR** for new backwards-compatible functionality, **PATCH** for
+fixes. Each commit's mandatory `Changelog:` trailer (`added`, `fixed`,
+`changed`, `deprecated`, `removed`, `security`, `performance`, `other`) says
+which section its change belongs in. Releases are tagged `v<version>` on
+GitHub, and the script reports its own version via `./dotenvxsh.sh --version`.
 
 ## [Unreleased]
+
+Nothing yet.
+
+## [0.1.0] - 2026-07-21
 
 ### Added
 
@@ -30,3 +38,7 @@ its change belongs in.
 - Documentation: README with prerequisites, installation, usage for every menu
   option, local vs global configuration, and security notes; `AGENTS.md` with
   non-interactive guidance and safety rules for AI coding agents.
+- `--version` / `-v` flag and a version number in the TUI banner.
+
+[Unreleased]: https://github.com/GavinTomlins/dotenvxsh/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/GavinTomlins/dotenvxsh/releases/tag/v0.1.0
