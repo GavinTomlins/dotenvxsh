@@ -2,10 +2,19 @@
 #
 # dotenvxsh — small TUI helper for adding secrets to dotenvx-encrypted .env files.
 #
-# Usage: ./dotenvxsh.sh [env-file]
+# Usage: ./dotenvxsh.sh [--no-echo] [env-file]
 #   With no argument, a picker offers ./.env (local) or the global credentials
 #   file — ~/.config/credentials/credentials.env by default, overridable via
 #   the DOTENVXSH_CREDENTIALS_FILE environment variable.
+#
+# Secret display (issue #4 — keep secrets out of terminal scrollback):
+#   DOTENVXSH_ECHO_SECRETS=always|masked|never   (default: masked)
+#     always — print decrypted values inline, in plaintext
+#     masked — round-trip checks print a masked value; Show reveals happen on
+#              the terminal's alternate screen and never enter scrollback
+#     never  — round-trip checks print only a verified/mismatch result;
+#              Show reveals still use the alternate screen
+#   --no-echo is shorthand for DOTENVXSH_ECHO_SECRETS=never.
 #
 # Flow per secret:
 #   1. Check the key does not already exist in the file.
@@ -18,14 +27,34 @@ set -euo pipefail
 
 VERSION="0.1.0"
 
-case "${1:-}" in
-  -v|--version)
-    printf 'dotenvxsh %s\n' "$VERSION"
-    exit 0
+ENV_FILE=""
+ECHO_SECRETS="${DOTENVXSH_ECHO_SECRETS:-masked}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -v|--version)
+      printf 'dotenvxsh %s\n' "$VERSION"
+      exit 0
+      ;;
+    --no-echo)
+      ECHO_SECRETS="never"
+      shift
+      ;;
+    *)
+      ENV_FILE="$1"
+      shift
+      ;;
+  esac
+done
+
+case "$ECHO_SECRETS" in
+  always|masked|never) ;;
+  *)
+    printf 'dotenvxsh: invalid DOTENVXSH_ECHO_SECRETS=%s (use always, masked, or never)\n' "$ECHO_SECRETS" >&2
+    exit 1
     ;;
 esac
 
-ENV_FILE="${1:-}"
 CREDENTIALS_FILE="${DOTENVXSH_CREDENTIALS_FILE:-${HOME}/.config/credentials/credentials.env}"
 
 BOLD=$'\033[1m'
@@ -75,13 +104,67 @@ encrypt_file() {
   dotenvx encrypt -f "$ENV_FILE" >/dev/null
 }
 
-# Decrypt one key with `dotenvx get` and echo it back as a round-trip check
-show_value() {
+# Mask a secret for display: first 4 and last 2 characters, or all-stars for
+# short values.
+mask_value() {
+  local v="$1"
+  if (( ${#v} <= 6 )); then
+    printf '******'
+  else
+    printf '%s…%s' "${v:0:4}" "${v: -2}"
+  fi
+}
+
+# Round-trip verification after a write: decrypt the key with `dotenvx get`
+# and compare it to the value that was entered. How much of the value is
+# echoed back depends on ECHO_SECRETS (issue #4 — scrollback hygiene).
+verify_value() {
+  local icon="$1" key="$2" expected="$3" actual
+  if ! actual="$(dotenvx get "$key" -f "$ENV_FILE" 2>/dev/null)"; then
+    warn "Could not decrypt ${key} for verification (is .env.keys present?)"
+    return 0
+  fi
+  if [[ "$actual" != "$expected" ]]; then
+    error "${key} decrypted value does NOT match what was entered!"
+    return 0
+  fi
+  case "$ECHO_SECRETS" in
+    always) printf '%s\n' "  ${icon} ${BOLD}${key}${RESET} = ${actual} ${GREEN}✔${RESET}" ;;
+    masked) printf '%s\n' "  ${icon} ${BOLD}${key}${RESET} = $(mask_value "$actual") ${GREEN}✔ verified${RESET}" ;;
+    never)  ok "${key} stored and verified (value not shown)" ;;
+  esac
+}
+
+# Reveal secrets on the terminal's alternate screen buffer (the mechanism
+# less/vim use). Content drawn there never enters the primary buffer's
+# scrollback and disappears completely when the screen is restored.
+# Args: pre-formatted display lines.
+reveal_secrets() {
+  local line
+  if ! tput smcup 2>/dev/null; then
+    # No alternate screen available (dumb terminal) — fall back to inline
+    warn "Terminal has no alternate screen — values will appear in scrollback."
+    for line in "$@"; do printf '%s\n' "$line"; done
+    return 0
+  fi
+  clear
+  printf '%s\n\n' "${VAULT_ICON} ${BOLD}dotenvxsh — secret reveal${RESET} ${DIM}(this screen is not kept in scrollback)${RESET}"
+  for line in "$@"; do printf '%s\n' "$line"; done
+  printf '\n%s' "${DIM}Press any key to hide…${RESET}"
+  read -rsn1 </dev/tty || true
+  tput rmcup
+  ok "Revealed on the alternate screen — nothing retained in scrollback."
+}
+
+# Display one decrypted key, honouring ECHO_SECRETS. Used by the Show options;
+# `always` prints inline like before, otherwise the reveal happens on the
+# alternate screen via the caller batching lines with format_secret_line.
+format_secret_line() {
   local icon="$1" key="$2" value
   if value="$(dotenvx get "$key" -f "$ENV_FILE" 2>/dev/null)"; then
-    printf '%s\n' "  ${icon} ${BOLD}${key}${RESET} = ${value}"
+    printf '%s' "  ${icon} ${BOLD}${key}${RESET} = ${value}"
   else
-    warn "Could not decrypt ${key} for display (is .env.keys present?)"
+    printf '%s' "  ${icon} ${BOLD}${key}${RESET} = ${RED}<could not decrypt — is .env.keys present?>${RESET}"
   fi
 }
 
@@ -256,8 +339,8 @@ update_secret() {
   prepare_file
   dotenvx set "$key" "$value" -f "$ENV_FILE" >/dev/null
   ok "Updated ${key} in ${ENV_FILE} (encrypted)"
-  info "Round-trip check (decrypted via dotenvx get):"
-  show_value "$icon" "$key"
+  info "Round-trip check:"
+  verify_value "$icon" "$key" "$value"
 }
 
 show_api_key() {
@@ -265,8 +348,12 @@ show_api_key() {
   if ! key="$(search_and_pick "$SHOW_ICON" "_API_KEY" "API key" "show")"; then
     return 0
   fi
-  info "Decrypted via dotenvx get:"
-  show_value "$KEY_ICON" "$key"
+  if [[ "$ECHO_SECRETS" == "always" ]]; then
+    info "Decrypted via dotenvx get:"
+    printf '%s\n' "$(format_secret_line "$KEY_ICON" "$key")"
+  else
+    reveal_secrets "$(format_secret_line "$KEY_ICON" "$key")"
+  fi
 }
 
 # Search both halves of a credential pair (*_PASSWORD and USER_*), dedupe to
@@ -310,16 +397,25 @@ show_user_password() {
     return 0
   fi
 
-  info "Decrypted via dotenvx get:"
+  local lines=()
   if key_exists "${name}_PASSWORD"; then
-    show_value "$KEY_ICON" "${name}_PASSWORD"
+    lines+=("$(format_secret_line "$KEY_ICON" "${name}_PASSWORD")")
   else
     warn "No ${name}_PASSWORD in ${ENV_FILE}."
   fi
   if key_exists "USER_${name}"; then
-    show_value "$USER_ICON" "USER_${name}"
+    lines+=("$(format_secret_line "$USER_ICON" "USER_${name}")")
   else
     warn "No USER_${name} in ${ENV_FILE}."
+  fi
+  if [[ ${#lines[@]} -eq 0 ]]; then
+    return 0
+  fi
+  if [[ "$ECHO_SECRETS" == "always" ]]; then
+    info "Decrypted via dotenvx get:"
+    printf '%s\n' "${lines[@]}"
+  else
+    reveal_secrets "${lines[@]}"
   fi
 }
 
@@ -340,8 +436,8 @@ add_api_key() {
   info "Encrypting new value"
   encrypt_file
   ok "Added ${key} to ${ENV_FILE} (encrypted)"
-  info "Round-trip check (decrypted via dotenvx get):"
-  show_value "$KEY_ICON" "$key"
+  info "Round-trip check:"
+  verify_value "$KEY_ICON" "$key" "$value"
 }
 
 add_user_password() {
@@ -378,9 +474,9 @@ add_user_password() {
   encrypt_file
   if [[ $skip_pass -eq 0 ]]; then ok "Added ${pass_key} to ${ENV_FILE} (encrypted)"; fi
   if [[ $skip_user -eq 0 ]]; then ok "Added ${user_key} to ${ENV_FILE} (encrypted)"; fi
-  info "Round-trip check (decrypted via dotenvx get):"
-  if [[ $skip_pass -eq 0 ]]; then show_value "$KEY_ICON" "$pass_key"; fi
-  if [[ $skip_user -eq 0 ]]; then show_value "$USER_ICON" "$user_key"; fi
+  info "Round-trip check:"
+  if [[ $skip_pass -eq 0 ]]; then verify_value "$KEY_ICON" "$pass_key" "$pass_val"; fi
+  if [[ $skip_user -eq 0 ]]; then verify_value "$USER_ICON" "$user_key" "$user_val"; fi
 }
 
 choose_env_file() {
