@@ -52,6 +52,24 @@ ln -s "$PWD/dotenvxsh.sh" /usr/local/bin/dotenvxsh
 ./dotenvxsh.sh --version     # print the version
 ```
 
+### Command-line options
+
+| Option | Description |
+| ------ | ----------- |
+| `[env-file]` | Positional: the env file to work on. Omit it to get the interactive picker (local `./.env` or the global vault). |
+| `--no-echo` | Never print decrypted values; round-trip checks report only ✔ verified / ✖ mismatch. Shorthand for `DOTENVXSH_ECHO_SECRETS=never`. |
+| `-v`, `--version` | Print the dotenvxsh version and exit. |
+
+Options can be combined with the positional file, e.g.
+`./dotenvxsh.sh --no-echo ~/.config/credentials/credentials.env`.
+
+### Environment variables
+
+| Variable | Default | Description |
+| -------- | ------- | ----------- |
+| `DOTENVXSH_CREDENTIALS_FILE` | `~/.config/credentials/credentials.env` | Location of the global credentials vault offered by the picker. |
+| `DOTENVXSH_ECHO_SECRETS` | `masked` | How decrypted values are displayed: `always` (plaintext inline), `masked` (partial value; reveals on the alternate screen), or `never` (verification result only; reveals on the alternate screen). See *Controlling how secrets are displayed*. |
+
 With no argument, the script first asks which env file to work on:
 
 ```
