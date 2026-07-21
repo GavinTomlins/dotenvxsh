@@ -3,7 +3,9 @@
 # dotenvxsh — small TUI helper for adding secrets to dotenvx-encrypted .env files.
 #
 # Usage: ./dotenvxsh.sh [env-file]
-#   With no argument, a picker offers ./.env or ~/.config/credentials/credentials.env.
+#   With no argument, a picker offers ./.env (local) or the global credentials
+#   file — ~/.config/credentials/credentials.env by default, overridable via
+#   the DOTENVXSH_CREDENTIALS_FILE environment variable.
 #
 # Flow per secret:
 #   1. Check the key does not already exist in the file.
@@ -15,7 +17,7 @@
 set -euo pipefail
 
 ENV_FILE="${1:-}"
-CREDENTIALS_FILE="${HOME}/.config/credentials/credentials.env"
+CREDENTIALS_FILE="${DOTENVXSH_CREDENTIALS_FILE:-${HOME}/.config/credentials/credentials.env}"
 
 BOLD=$'\033[1m'
 DIM=$'\033[2m'
