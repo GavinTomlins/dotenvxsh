@@ -18,12 +18,20 @@ dotenvx encrypt -f <env-file>           # encrypt any plaintext values in the fi
 ## Follow the naming schema
 
 Entries written with raw `dotenvx set` must match the conventions the TUI
-enforces, or its search and pair-display options will not find them:
+enforces. Naming follows `DOTENVXSH_NAMING_SCHEMA`:
 
-- API keys: `<NAME>_API_KEY` (e.g. `GITLAB_API_KEY`)
-- Credential pairs: `<NAME>_PASSWORD` **and** `USER_<NAME>` — always both
-  halves; the pair lookup derives one name from the other
+- `suffix` (default): `<NAME>_API_KEY`, `<NAME>_PASSWORD`, `<NAME>_USER`
+- `reverse`: `API_KEY_<NAME>`, `PASSWORD_<NAME>`, `USER_<NAME>`
+
+Rules either way:
+
+- Respect the user's configured schema when adding new keys; check the
+  environment variable (unset means `suffix`)
+- Credential pairs: always write both halves (password **and** user key); the
+  TUI's pair display derives one name from the other
 - Names are uppercase `A–Z`, `0–9`, and `_` only
+- The TUI's search/update/show tolerate both orders, so existing entries in
+  either schema remain accessible — do not rename existing keys to "fix" them
 
 ## Target files
 

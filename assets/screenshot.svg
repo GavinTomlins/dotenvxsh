@@ -15,11 +15,11 @@
     <text x="20" y="184"><tspan font-weight="bold" fill="#e6e9f0">Choose [1/2]:</tspan> 2</text>
     <text x="20" y="216"><tspan font-weight="bold" fill="#e6e9f0">dotenvxsh</tspan> <tspan fill="#8a8fa3">— target file: ~/.config/credentials/credentials.env</tspan></text>
     <text x="36" y="240"><tspan font-weight="bold" fill="#e6e9f0">1</tspan>) 🔑 API_KEY          <tspan fill="#8a8fa3">(adds &lt;NAME&gt;_API_KEY)</tspan></text>
-    <text x="36" y="262"><tspan font-weight="bold" fill="#e6e9f0">2</tspan>) 👤 USER &amp; PASSWORD  <tspan fill="#8a8fa3">(adds &lt;NAME&gt;_PASSWORD and USER_&lt;NAME&gt;)</tspan></text>
+    <text x="36" y="262"><tspan font-weight="bold" fill="#e6e9f0">2</tspan>) 👤 USER &amp; PASSWORD  <tspan fill="#8a8fa3">(adds &lt;NAME&gt;_PASSWORD and &lt;NAME&gt;_USER)</tspan></text>
     <text x="36" y="284"><tspan font-weight="bold" fill="#e6e9f0">3</tspan>) ✏️ Update API_KEY   <tspan fill="#8a8fa3">(search &amp; update a *_API_KEY)</tspan></text>
     <text x="36" y="306"><tspan font-weight="bold" fill="#e6e9f0">4</tspan>) ✏️ Update PASSWORD  <tspan fill="#8a8fa3">(search &amp; update a *_PASSWORD)</tspan></text>
     <text x="36" y="328"><tspan font-weight="bold" fill="#e6e9f0">5</tspan>) 🔍 Show API_KEY     <tspan fill="#8a8fa3">(search &amp; display a *_API_KEY)</tspan></text>
-    <text x="36" y="350"><tspan font-weight="bold" fill="#e6e9f0">6</tspan>) 🔍 Show USER &amp; PASSWORD <tspan fill="#8a8fa3">(search &amp; display *_PASSWORD + USER_*)</tspan></text>
+    <text x="36" y="350"><tspan font-weight="bold" fill="#e6e9f0">6</tspan>) 🔍 Show USER &amp; PASSWORD <tspan fill="#8a8fa3">(search &amp; display a credential pair)</tspan></text>
     <text x="36" y="372"><tspan font-weight="bold" fill="#e6e9f0">7</tspan>) 🔒 Encrypt file     <tspan fill="#8a8fa3">(dotenvx encrypt the whole file)</tspan></text>
     <text x="36" y="394"><tspan font-weight="bold" fill="#e6e9f0">8</tspan>) 🔓 Decrypt file     <tspan fill="#8a8fa3">(dotenvx decrypt to plaintext, backup first)</tspan></text>
     <text x="36" y="416"><tspan font-weight="bold" fill="#e6e9f0">q</tspan>) Quit</text>
