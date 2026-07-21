@@ -69,6 +69,7 @@ Options can be combined with the positional file, e.g.
 | -------- | ------- | ----------- |
 | `DOTENVXSH_CREDENTIALS_FILE` | `~/.config/credentials/credentials.env` | Location of the global credentials vault offered by the picker. |
 | `DOTENVXSH_ECHO_SECRETS` | `masked` | How decrypted values are displayed: `always` (plaintext inline), `masked` (partial value; reveals on the alternate screen), or `never` (verification result only; reveals on the alternate screen). See *Controlling how secrets are displayed*. |
+| `DOTENVXSH_NAMING_SCHEMA` | `suffix` | How new keys are named: `suffix` (`AIHUB_API_KEY`, `AIHUB_PASSWORD`, `AIHUB_USER`) or `reverse` (`API_KEY_AIHUB`, `PASSWORD_AIHUB`, `USER_AIHUB`). See *Naming schema*. |
 
 With no argument, the script first asks which env file to work on:
 
@@ -139,11 +140,11 @@ dotenvx run -f ~/.config/credentials/credentials.env -- some-command
 
 ```
   1) 🔑 API_KEY          (adds <NAME>_API_KEY)
-  2) 👤 USER & PASSWORD  (adds <NAME>_PASSWORD and USER_<NAME>)
+  2) 👤 USER & PASSWORD  (adds <NAME>_PASSWORD and <NAME>_USER)
   3) ✏️ Update API_KEY   (search & update a *_API_KEY)
   4) ✏️ Update PASSWORD  (search & update a *_PASSWORD)
   5) 🔍 Show API_KEY     (search & display a *_API_KEY)
-  6) 🔍 Show USER & PASSWORD (search & display *_PASSWORD + USER_*)
+  6) 🔍 Show USER & PASSWORD (search & display a credential pair)
   7) 🔒 Encrypt file     (dotenvx encrypt the whole file)
   8) 🔓 Decrypt file     (dotenvx decrypt to plaintext, backup first)
   q) Quit
@@ -155,9 +156,23 @@ becomes an underscore — `some system` → `SOME_SYSTEM_API_KEY`). The value is
 entered hidden.
 
 **2 — Add a user & password pair.** One name produces both variables:
-`<NAME>_PASSWORD` and `USER_<NAME>` (e.g. `AIHUB` → `AIHUB_PASSWORD` and
-`USER_AIHUB`). If one half of the pair already exists, it is skipped and the
+`<NAME>_PASSWORD` and `<NAME>_USER` (e.g. `AIHUB` → `AIHUB_PASSWORD` and
+`AIHUB_USER`). If one half of the pair already exists, it is skipped and the
 other is still added.
+
+#### Naming schema
+
+Key names follow `DOTENVXSH_NAMING_SCHEMA`:
+
+| Schema | API key | Password | User |
+| ------ | ------- | -------- | ---- |
+| `suffix` *(default)* | `AIHUB_API_KEY` | `AIHUB_PASSWORD` | `AIHUB_USER` |
+| `reverse` | `API_KEY_AIHUB` | `PASSWORD_AIHUB` | `USER_AIHUB` |
+
+The schema only affects how **new** keys are named. Search, update, and the
+show options recognise both orders regardless of the setting, so entries
+written under either schema (or a mix) remain fully accessible, and option 6
+displays every variant of a credential pair that exists in the file.
 
 **3 / 4 — Update.** Type a search term (case-insensitive substring — `gitlab`
 finds `GITLAB_API_KEY` and `GITLAB_CI_API_KEY`). A single hit goes straight to

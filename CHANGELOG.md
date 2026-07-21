@@ -22,11 +22,20 @@ GitHub, and the script reports its own version via `./dotenvxsh.sh --version`.
   print masked values (or none), and the Show options reveal secrets on the
   terminal's alternate screen, which is never retained in scrollback.
 
+- Configurable key-naming schema via `DOTENVXSH_NAMING_SCHEMA`: `suffix`
+  (default — `AIHUB_API_KEY`, `AIHUB_PASSWORD`, `AIHUB_USER`) or `reverse`
+  (`API_KEY_AIHUB`, `PASSWORD_AIHUB`, `USER_AIHUB`). Menu descriptions adapt
+  to the active schema.
+
 ### Changed
 
 - The round-trip check after every write now verifies that the stored value
   decrypts back to exactly what was entered, reporting any mismatch, instead
   of just echoing the decrypted value.
+- The default user-key name for credential pairs is now `<NAME>_USER`
+  (previously `USER_<NAME>`). Search, update, and show recognise both orders
+  in either schema, so existing entries — including the old mixed layout —
+  remain fully accessible.
 
 ## [0.1.0] - 2026-07-21
 
