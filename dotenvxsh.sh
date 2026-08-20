@@ -142,15 +142,43 @@ mask_value() {
   fi
 }
 
+# Run `dotenvx get` for one key, classifying every failure mode dotenvx has:
+# nonzero exit, a still-encrypted value on exit 0 (missing/wrong private key,
+# real reason only on stderr), and an empty result (key not found).
+# Sets GET_VALUE and GET_ERROR; returns 0 only when a plaintext value came back.
+dotenvx_get_checked() {
+  local key="$1" tmp rc
+  GET_VALUE="" GET_ERROR=""
+  tmp="$(mktemp)"
+  GET_VALUE="$(dotenvx get "$key" -f "$ENV_FILE" 2>"$tmp")"
+  rc=$?
+  GET_ERROR="$(head -c 160 "$tmp" | tr '\n' ' ')"
+  rm -f "$tmp"
+  if [[ $rc -ne 0 ]]; then
+    GET_ERROR="dotenvx get failed (exit ${rc})${GET_ERROR:+: ${GET_ERROR}}"
+    return 1
+  fi
+  if [[ "$GET_VALUE" == encrypted:* ]]; then
+    GET_ERROR="still encrypted${GET_ERROR:+: ${GET_ERROR}}— check .env.keys sits next to ${ENV_FILE}, no stale DOTENV_PRIVATE_KEY* is exported, and 'dotenvx --version'"
+    return 1
+  fi
+  if [[ -z "$GET_VALUE" ]]; then
+    GET_ERROR="dotenvx returned nothing for ${key}${GET_ERROR:+: ${GET_ERROR}}"
+    return 1
+  fi
+  return 0
+}
+
 # Round-trip verification after a write: decrypt the key with `dotenvx get`
 # and compare it to the value that was entered. How much of the value is
 # echoed back depends on ECHO_SECRETS (issue #4 — scrollback hygiene).
 verify_value() {
   local icon="$1" key="$2" expected="$3" actual
-  if ! actual="$(dotenvx get "$key" -f "$ENV_FILE" 2>/dev/null)"; then
-    warn "Could not decrypt ${key} for verification (is .env.keys present?)"
+  if ! dotenvx_get_checked "$key"; then
+    error "Could not verify ${key}: ${GET_ERROR}"
     return 0
   fi
+  actual="$GET_VALUE"
   if [[ "$actual" != "$expected" ]]; then
     error "${key} decrypted value does NOT match what was entered!"
     return 0
@@ -187,11 +215,11 @@ reveal_secrets() {
 # `always` prints inline like before, otherwise the reveal happens on the
 # alternate screen via the caller batching lines with format_secret_line.
 format_secret_line() {
-  local icon="$1" key="$2" value
-  if value="$(dotenvx get "$key" -f "$ENV_FILE" 2>/dev/null)"; then
-    printf '%s' "  ${icon} ${BOLD}${key}${RESET} = ${value}"
+  local icon="$1" key="$2"
+  if dotenvx_get_checked "$key"; then
+    printf '%s' "  ${icon} ${BOLD}${key}${RESET} = ${GET_VALUE}"
   else
-    printf '%s' "  ${icon} ${BOLD}${key}${RESET} = ${RED}<could not decrypt — is .env.keys present?>${RESET}"
+    printf '%s' "  ${icon} ${BOLD}${key}${RESET} = ${RED}<${GET_ERROR}>${RESET}"
   fi
 }
 

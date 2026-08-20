@@ -13,7 +13,14 @@ GitHub, and the script reports its own version via `./dotenvxsh.sh --version`.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- Decrypt failures now report dotenvx's actual error (e.g.
+  `[MISSING_PRIVATE_KEY] …`) with remediation hints, instead of a generic
+  "could not decrypt" guess. The script also detects the cases where
+  `dotenvx get` exits successfully but returns a still-encrypted value
+  (missing/mismatched private key) or nothing at all (key not found), which
+  were previously misread as valid values.
 
 ## [0.2.0] - 2026-07-21
 
